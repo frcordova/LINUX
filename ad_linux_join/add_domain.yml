@@ -1,0 +1,72 @@
+---
+- name: Add join
+  hosts: all
+  become: true
+  vars:
+    packages:
+      - realmd
+      - oddjob
+      - oddjob-mkhomedir
+      - samba-common
+      - samba-common-tools
+      - samba
+      - authconfig
+      - samba-client 
+      - samba-winbind 
+      - samba-winbind-clients
+
+    domain: gad.schneider-electric.com
+    admin_user:
+    admin_user_password:
+    org_unit:
+    group_access:
+    sudo_access_group:
+
+    services_handler:
+      - smb
+      - winbind
+
+  tasks:
+
+#    - name: Check required packages
+#      package:
+#        name: '{{ item }}'
+#        state: latest
+#      loop: '{{ packages }}'
+
+#    - name: Update /etc/hosts file 
+#      lineinfile:
+#          path: "/etc/hosts"
+#          line: '{{ inventory_hostname }} {{ ansible_nodename }} {{ domain }}' 
+#          state: present
+#          backup: yes
+
+    - name: Check if sssd is present
+      ansible.builtin.package_facts:
+        manager: auto
+
+    - name: Stop sssd if present
+      service:
+        name: sssd
+        state: stopped
+      when: "'sssd' in ansible_facts.packages"
+
+    - name: Preparing environment
+      shell: |
+        date=$(date '+%d%m%Y')
+        cp /etc/samba/smb.conf /etc/samba/smb.conf.bkp.$date
+        > /etc/samba.conf; chmod 600 /etc/samba/smb.conf
+        if [ -f /etc/krb5.conf ]; then
+          cp /etc/krb5.conf /etc/krb5.conf.bkp.$date
+        fi
+        cp /etc/nsswitch.conf /etc/nsswitch.conf.bkp.$date
+
+    - name: Start Handlers
+      service:
+        name: '{{ item }}'
+        state: started
+      loop: '{{ services_handler }}'
+
+    - name: Add Join
+      shell: |
+        echo "Joining"
