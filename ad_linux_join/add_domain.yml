@@ -1,6 +1,6 @@
 ---
 - name: Add join
-  hosts: all
+  hosts: '{{ server }}'
   become: true
   vars:
     packages:
@@ -60,6 +60,7 @@
           cp /etc/krb5.conf /etc/krb5.conf.bkp.$date
         fi
         cp /etc/nsswitch.conf /etc/nsswitch.conf.bkp.$date
+        cp -rp /etc/pam.d/ /etc/pam.d.bkp.$date
 
     - name: Start Handlers
       service:
