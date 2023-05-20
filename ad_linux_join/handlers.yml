@@ -1,0 +1,5 @@
+- name: Start Handlers
+  service:
+    name: '{{ item }}'
+    state: restarted
+  loop: '{{ services_handler }}'
