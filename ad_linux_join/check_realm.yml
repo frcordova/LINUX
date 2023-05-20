@@ -1,0 +1,16 @@
+- name: Checking realm if exists
+  shell: |
+    realm=$(realm list)
+    #realm='text'
+    if [[ $realm != '' ]];then
+      echo "Server already in domain"
+      echo $realm
+    else
+      echo 0
+    fi
+  register: realm
+
+- name: Show domain Data
+  debug:
+    var: realm.stdout_lines
+  when: realm.stdout != "0"
